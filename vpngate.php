@@ -135,6 +135,7 @@ function checkRequirements()
 
 
 function downloadConfig() {
+    echo "Downloading configuration\n";
     $response = explode("\n", file_get_contents('http://www.vpngate.net/api/iphone/'));
     $total=0;
     $countries=[];
@@ -151,7 +152,7 @@ function downloadConfig() {
         if (!array_key_exists($connection[6], $countries)) $countries[$connection[6]]=0;
         $countries[$connection[6]]++;
         $total++;
-        echo sprintf("%s;%s;%s;%s\n",$connection[1],$connection[5],$connection[6],$connection[12]);
+        echo sprintf("%s\t%s\t%s\t%s\n",$connection[1],$connection[5],$connection[6],$connection[12]);
     }
     echo "Total $total configurations found from ".count($countries)." countries\n";
 }
