@@ -1,6 +1,7 @@
 Very Simple VPN Gate Script
 ===================
 
+Forked from https://github.com/thsteinmetz/vpngate
 
 This is an extremly simple script to connect to a VPN from the vpngate.net service. The script currently only runs on Linux,requires openvpn, and `sudo` in order to run.
 

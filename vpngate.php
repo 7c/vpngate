@@ -5,10 +5,23 @@
  * Must be run as root.
  */
 checkRequirements();
-$options = getopt("c:s", ['country::', 'status::']);
+$options = getopt("c:six", ['country::', 'status::','ip','config']);
 $country = $options['c'] ?? $options['country'] ?? null;
 $checkStatus = isset($options['status']) || isset($options['s']);
+$checkIP = isset($options['ip']) || isset($options['i']);
+$checkConfig = isset($options['x']);
 $start = true;
+
+if ($checkConfig) {
+    downloadConfig();
+    exit;
+}
+
+if ($checkIP) {
+    $ip = externalIP();
+    echo sprintf("Current external ip : %s\n",$ip?$ip:'could not determine');
+    exit;
+}
 
 if ($checkStatus) {
     if (isVpnRunning()) {
@@ -25,6 +38,7 @@ if ($checkStatus) {
 if ($start === true || in_array($start, ['y', 'yes'])) {
     $response = explode("\n", file_get_contents('http://www.vpngate.net/api/iphone/'));
     $count = 0;
+    echo "Total vpngate csv lines : ".count($response)."\n";
     foreach ($response as $row) {
         if ($count < 2) { // first two rows
             $count++;
@@ -34,11 +48,24 @@ if ($start === true || in_array($start, ['y', 'yes'])) {
         if (!isset($connection[6])) {
             continue;
         }
+        // print_r($connection);
 
         if (is_null($country) || $connection[6] == strtoupper($country)) {
-            connectVPN($connection);
+            // connectVPN($connection);
         }
     }
+}
+
+/**
+ * Using opendns resolver to determine external ip address
+ * @return false|string $ip
+ */
+function externalIP() {
+    $res = shell_exec("dig +short myip.opendns.com @resolver1.opendns.com");
+    $res = preg_replace("/[^0-9.]/","",$res);
+    var_dump($res);
+    if (filter_var($res,FILTER_VALIDATE_IP)) return $res;
+    return false;
 }
 
 /**
@@ -104,4 +131,27 @@ function checkRequirements()
     if (strpos($result[0], 'install ok installed') === false) {
         exit("OpenVPN must be installed! Exiting!");
     }
+}
+
+
+function downloadConfig() {
+    $response = explode("\n", file_get_contents('http://www.vpngate.net/api/iphone/'));
+    $total=0;
+    $countries=[];
+    $count = 0;
+    foreach ($response as $row) {
+        if ($count < 2) { // first two rows
+            $count++;
+            continue;
+        }
+        $connection = str_getcsv($row);
+        if (!isset($connection[6])) {
+            continue;
+        }
+        if (!array_key_exists($connection[6], $countries)) $countries[$connection[6]]=0;
+        $countries[$connection[6]]++;
+        $total++;
+        echo sprintf("%s;%s;%s;%s\n",$connection[1],$connection[5],$connection[6],$connection[12]);
+    }
+    echo "Total $total configurations found from ".count($countries)." countries\n";
 }
