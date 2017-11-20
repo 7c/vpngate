@@ -51,7 +51,7 @@ if ($start === true || in_array($start, ['y', 'yes'])) {
         // print_r($connection);
 
         if (is_null($country) || $connection[6] == strtoupper($country)) {
-            // connectVPN($connection);
+            connectVPN($connection);
         }
     }
 }
